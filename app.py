@@ -61,8 +61,8 @@ def mostrar_login():
     st.title("🔐 Acceso al portal de reportes")
 
     with st.form("login_form"):
-        usuario = st.text_input("👤 Usuario")
-        password = st.text_input("🔒 Contraseña", type="password")
+        usuario = st.text_input("👤 Usuario").strip()
+        password = st.text_input("🔒 Contraseña", type="password").strip()
         submit = st.form_submit_button("Iniciar sesión")
 
     if submit:
