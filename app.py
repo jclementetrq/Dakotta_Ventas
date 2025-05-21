@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 import pandas as pd
 
 # ------------------------------------------
@@ -10,24 +9,35 @@ st.set_page_config(page_title="Portal de Reportes", layout="wide")
 # ------------------------------------------
 # CONFIGURACIÓN DE LA APLICACIÓN
 # ------------------------------------------
-# Ruta donde están guardados los archivos Excel generados
-CARPETA_RESULTADOS = "data"
+# Tu usuario y repositorio de GitHub
+USUARIO_GITHUB = "jclementetrq"
+REPO_GITHUB = "Dakotta_Ventas"
+RAMO = "main"  # o 'master' si usas esa rama
 
-# Diccionario de usuarios y contraseñas (puedes extenderlo)
+# Diccionario de usuarios y contraseñas
 usuarios = {
     "ALMEIDA CUATIN JHONATHANN CARLOS": "1234",
     "CASTRO ALCIVAR EDA MARIA": "abcd",
     "CHANDI ERAZO JOSUE": "pass123",
 }
 
-# Inicializar sesión
+# ------------------------------------------
+# SESIÓN
+# ------------------------------------------
 if "pagina" not in st.session_state:
     st.session_state.pagina = "login"
 if "usuario" not in st.session_state:
     st.session_state.usuario = None
 
 # ------------------------------------------
-# FUNCIÓN: mostrar login
+# CACHÉ DE LECTURA
+# ------------------------------------------
+@st.cache_data(ttl=300)  # Cache por 5 minutos
+def leer_excel_remoto(url):
+    return pd.read_excel(url, sheet_name=None)
+
+# ------------------------------------------
+# LOGIN
 # ------------------------------------------
 def mostrar_login():
     st.title("🔐 Acceso al portal de reportes")
@@ -45,27 +55,26 @@ def mostrar_login():
             st.error("❌ Usuario o contraseña incorrectos.")
 
 # ------------------------------------------
-# FUNCIÓN: mostrar una hoja completa
+# REPORTE
 # ------------------------------------------
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
-    archivo_usuario = os.path.join(CARPETA_RESULTADOS, f"{st.session_state.usuario}.xlsx")
-    if not os.path.exists(archivo_usuario):
-        st.error("⚠ No se encontró el archivo para este usuario.")
-        return
+    # Construir URL al archivo en GitHub
+    nombre_archivo = f"{st.session_state.usuario}.xlsx"
+    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMO}/data/{nombre_archivo}"
 
     try:
-        excel_data = pd.read_excel(archivo_usuario, sheet_name=None)
+        excel_data = leer_excel_remoto(url_archivo)
         hojas = list(excel_data.keys())
 
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
-
         df = excel_data[hoja_seleccionada]
+
         st.dataframe(df, use_container_width=True)
 
     except Exception as e:
-        st.error(f"⚠ Error al cargar el archivo: {e}")
+        st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
 
     st.markdown("---")
     if st.button("🔒 Cerrar sesión"):
@@ -74,7 +83,7 @@ def mostrar_reportes():
         st.rerun()
 
 # ------------------------------------------
-# NAVEGACIÓN
+# NAVEGACIÓN PRINCIPAL
 # ------------------------------------------
 if st.session_state.pagina == "login":
     mostrar_login()
