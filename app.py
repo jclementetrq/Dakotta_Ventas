@@ -15,21 +15,47 @@ REPO_GITHUB = "Dakotta_Ventas"
 RAMA = "main"
 CARPETA = "data"
 
-# Diccionario de usuarios y contraseñas
+# ------------------------------------------
+# CREDENCIALES Y MAPEO DE ARCHIVOS
+# ------------------------------------------
 usuarios = {
-    "ALMEIDA CUATIN JHONATHANN CARLOS": "1234",
-    "CASTRO ALCIVAR EDA MARIA": "abcd",
-    "CHANDI ERAZO JOSUE": "pass123",
+    "jalmeida": "Jalm_2025",
+    "ecastro": "Ecas_2025",
+    "jchandi": "Jcha_2025",
+    "fguerrero": "Fgue_2025",
+    "ghidalgo": "Ghid_2025",
+    "blindao": "Blin_2025",
+    "tlozano": "Tloz_2025",
+    "oficina": "Ofi_2025",
+    "arios": "Ario_2025",
+    "estrobel": "Estr_2025",
+    "cvaca": "Cvac_2025",
 }
 
-# Inicialización de sesión
+mapeo_archivos = {
+    "jalmeida": "ALMEIDA CUATIN JHONATHANN CARLOS.xlsx",
+    "ecastro": "CASTRO ALCIVAR EDA MARIA.xlsx",
+    "jchandi": "CHANDI ERAZO JOSUE.xlsx",
+    "fguerrero": "GUERRERO FAREZ FABIAN MAURICIO.xlsx",
+    "ghidalgo": "HIDALGO HIDALGO PEDRO GUSTAVO.xlsx",
+    "blindao": "LINDAO ZUÑIGA BRYAN JOSE.xlsx",
+    "tlozano": "LOZANO MOLINA TITO.xlsx",
+    "oficina": "OFICINA-CATAECSA.xlsx",
+    "arios": "RIOS CARRION ANGEL BENIGNO.xlsx",
+    "estrobel": "STROBEL CORDERO MARIA ELISABETH.xlsx",
+    "cvaca": "VACA PANCHI CAROLINA.xlsx",
+}
+
+# ------------------------------------------
+# INICIALIZAR SESIÓN
+# ------------------------------------------
 if "pagina" not in st.session_state:
     st.session_state.pagina = "login"
 if "usuario" not in st.session_state:
     st.session_state.usuario = None
 
 # ------------------------------------------
-# FUNCIÓN: mostrar login
+# FUNCIÓN: LOGIN
 # ------------------------------------------
 def mostrar_login():
     st.title("🔐 Acceso al portal de reportes")
@@ -47,14 +73,18 @@ def mostrar_login():
             st.error("❌ Usuario o contraseña incorrectos.")
 
 # ------------------------------------------
-# FUNCIÓN: mostrar reportes
+# FUNCIÓN: MOSTRAR REPORTES
 # ------------------------------------------
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
-    nombre_archivo = f"{st.session_state.usuario}.xlsx"
+    # Obtener el nombre real del archivo asociado al usuario
+    nombre_archivo = mapeo_archivos.get(st.session_state.usuario)
+    if not nombre_archivo:
+        st.error("⚠ No se encontró archivo asociado a este usuario.")
+        return
+
     nombre_archivo_encoded = urllib.parse.quote(nombre_archivo)
-    
     url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
 
     try:
