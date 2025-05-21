@@ -90,9 +90,24 @@ def mostrar_reportes():
     try:
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
         hojas = list(excel_data.keys())
-
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
+
+        # Normalizar nombres de columna
+        df.columns = df.columns.str.strip().str.lower()
+        columnas = df.columns.tolist()
+
+        # Buscar las columnas de asesor y cliente
+        col_asesor = next((col for col in columnas if "asesor" in col), None)
+        col_cliente = next((col for col in columnas if "cliente" in col), None)
+
+        if not col_asesor or not col_cliente:
+            st.error("❌ No se encontraron columnas 'asesor' y 'cliente'. Verifica los encabezados del archivo.")
+            st.write("Columnas disponibles:", columnas)
+            return
+
+        columnas_fijas = [col_asesor, col_cliente]
+        columnas_dolares = [col for col in df.columns if col not in columnas_fijas]
 
         # Separar última fila (indicadores)
         datos = df.iloc[:-1]
@@ -100,9 +115,6 @@ def mostrar_reportes():
 
         # Mostrar datos principales
         st.subheader("📊 Datos principales")
-        columnas_fijas = ["asesor", "cliente"]
-        columnas_dolares = [col for col in df.columns if col not in columnas_fijas]
-
         datos_principales = datos[columnas_fijas + columnas_dolares]
         st.dataframe(datos_principales.style.format({col: "${:,.2f}" for col in columnas_dolares}),
                      use_container_width=True)
