@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import urllib.parse
+from io import BytesIO
 
 # ------------------------------------------
 # CONFIGURACIÓN DE LA PÁGINA
@@ -94,7 +95,37 @@ def mostrar_reportes():
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        st.dataframe(df, use_container_width=True)
+        if df.shape[0] < 2 or df.shape[1] < 3:
+            st.warning("❗ El archivo no tiene suficientes filas o columnas para aplicar el formato.")
+            st.dataframe(df)
+        else:
+            # Separar desde la columna 3 en adelante
+            datos_principales = df.iloc[:-1, 2:]
+            indicadores = df.iloc[-1:, 2:]
+
+            # Formatear como dólares
+            datos_formateados = datos_principales.applymap(lambda x: f"${x:,.2f}" if isinstance(x, (int, float)) else x)
+            indicadores_formateados = indicadores.applymap(lambda x: f"{x:,.2f}" if isinstance(x, (int, float)) else x)
+
+            st.subheader("📊 Datos principales")
+            st.dataframe(datos_formateados, use_container_width=True)
+
+            st.subheader("📌 Indicadores finales")
+            st.dataframe(indicadores_formateados, use_container_width=True)
+
+            # Botón de descarga de archivo Excel
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                datos_principales.to_excel(writer, index=False, sheet_name="Datos")
+                indicadores.to_excel(writer, index=False, sheet_name="Indicadores")
+            output.seek(0)
+
+            st.download_button(
+                label="⬇️ Descargar reporte en Excel",
+                data=output,
+                file_name=f"Reporte_{st.session_state.usuario}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
