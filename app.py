@@ -79,7 +79,6 @@ def mostrar_login():
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
-    # Obtener el nombre real del archivo asociado al usuario
     nombre_archivo = mapeo_archivos.get(st.session_state.usuario)
     if not nombre_archivo:
         st.error("⚠ No se encontró archivo asociado a este usuario.")
@@ -96,24 +95,33 @@ def mostrar_reportes():
         df = excel_data[hoja_seleccionada]
 
         if df.shape[0] < 2 or df.shape[1] < 3:
-            st.warning("❗ El archivo no tiene suficientes filas o columnas para aplicar el formato.")
+            st.warning("❗ El archivo no tiene suficientes filas o columnas.")
             st.dataframe(df)
         else:
-            # Separar desde la columna 3 en adelante
-            datos_principales = df.iloc[:-1, 2:]
-            indicadores = df.iloc[-1:, 2:]
+            # Separar datos principales (todas menos la última fila)
+            datos_principales = df.iloc[:-1, :]
+            indicadores = df.iloc[-1:, :]
 
-            # Formatear como dólares
-            datos_formateados = datos_principales.applymap(lambda x: f"${x:,.2f}" if isinstance(x, (int, float)) else x)
-            indicadores_formateados = indicadores.applymap(lambda x: f"{x:,.2f}" if isinstance(x, (int, float)) else x)
+            # Formatear columnas 3 en adelante como dólares
+            def formatear_dolares(df):
+                df_formateado = df.copy()
+                for col in df.columns[2:]:
+                    df_formateado[col] = df_formateado[col].apply(
+                        lambda x: f"${x:,.2f}" if isinstance(x, (int, float)) else x
+                    )
+                return df_formateado
 
+            datos_formateados = formatear_dolares(datos_principales)
+            indicadores_formateados = formatear_dolares(indicadores)
+
+            # Mostrar tablas
             st.subheader("📊 Datos principales")
             st.dataframe(datos_formateados, use_container_width=True)
 
             st.subheader("📌 Indicadores finales")
             st.dataframe(indicadores_formateados, use_container_width=True)
 
-            # Botón de descarga de archivo Excel
+            # Botón de descarga
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 datos_principales.to_excel(writer, index=False, sheet_name="Datos")
