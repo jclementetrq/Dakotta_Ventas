@@ -93,8 +93,8 @@ def mostrar_reportes():
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        if 'asesor' not in df.columns or 'cliente' not in df.columns:
-            st.error("❌ Las columnas 'asesor' o 'cliente' no existen en la hoja seleccionada.")
+        if 'ASESOR' not in df.columns or 'CLIENTE' not in df.columns:
+            st.error("❌ Las columnas 'ASESOR' o 'CLIENTE' no existen en la hoja seleccionada.")
             return
 
         asesores = sorted(df['ASESOR'].dropna().unique())
@@ -107,7 +107,7 @@ def mostrar_reportes():
 
         # Filtrar clientes si se seleccionó asesor
         if asesor_sel:
-            clientes_filtrados = df[df['ASESOR'] == asesor_sel]['cliente'].dropna().unique()
+            clientes_filtrados = df[df['ASESOR'] == asesor_sel]['CLIENTE'].dropna().unique()
         else:
             clientes_filtrados = clientes
 
