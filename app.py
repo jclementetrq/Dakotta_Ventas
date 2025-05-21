@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from urllib.parse import quote
 
 # ------------------------------------------
 # CONFIGURACIÓN GENERAL DE LA PÁGINA
@@ -9,20 +10,21 @@ st.set_page_config(page_title="Portal de Reportes", layout="wide")
 # ------------------------------------------
 # CONFIGURACIÓN DE LA APLICACIÓN
 # ------------------------------------------
-# Tu usuario y repositorio de GitHub
-USUARIO_GITHUB = "jclementetrq"
-REPO_GITHUB = "Dakotta_Ventas"
-RAMO = "main"  # o 'master' si usas esa rama
 
-# Diccionario de usuarios y contraseñas
+# Datos de acceso de los usuarios (puedes agregar más)
 usuarios = {
     "ALMEIDA CUATIN JHONATHANN CARLOS": "1234",
     "CASTRO ALCIVAR EDA MARIA": "abcd",
     "CHANDI ERAZO JOSUE": "pass123",
 }
 
+# Parámetros del repositorio GitHub
+USUARIO_GITHUB = "jclementetrq"
+REPO_GITHUB = "Dakotta_Ventas"
+RAMO = "main"
+
 # ------------------------------------------
-# SESIÓN
+# INICIALIZACIÓN DE ESTADO DE SESIÓN
 # ------------------------------------------
 if "pagina" not in st.session_state:
     st.session_state.pagina = "login"
@@ -30,14 +32,7 @@ if "usuario" not in st.session_state:
     st.session_state.usuario = None
 
 # ------------------------------------------
-# CACHÉ DE LECTURA
-# ------------------------------------------
-@st.cache_data(ttl=300)  # Cache por 5 minutos
-def leer_excel_remoto(url):
-    return pd.read_excel(url, sheet_name=None)
-
-# ------------------------------------------
-# LOGIN
+# FUNCIÓN: LOGIN
 # ------------------------------------------
 def mostrar_login():
     st.title("🔐 Acceso al portal de reportes")
@@ -55,17 +50,17 @@ def mostrar_login():
             st.error("❌ Usuario o contraseña incorrectos.")
 
 # ------------------------------------------
-# REPORTE
+# FUNCIÓN: MOSTRAR REPORTES
 # ------------------------------------------
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
-    # Construir URL al archivo en GitHub
+    # Nombre del archivo codificado para la URL
     nombre_archivo = f"{st.session_state.usuario}.xlsx"
-    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMO}/data/{nombre_archivo}"
+    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMO}/data/{quote(nombre_archivo)}"
 
     try:
-        excel_data = leer_excel_remoto(url_archivo)
+        excel_data = pd.read_excel(url_archivo, sheet_name=None)
         hojas = list(excel_data.keys())
 
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
@@ -83,7 +78,7 @@ def mostrar_reportes():
         st.rerun()
 
 # ------------------------------------------
-# NAVEGACIÓN PRINCIPAL
+# NAVEGACIÓN
 # ------------------------------------------
 if st.session_state.pagina == "login":
     mostrar_login()
