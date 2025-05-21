@@ -91,41 +91,66 @@ def mostrar_reportes():
         hojas = list(excel_data.keys())
 
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
-        df = excel_data[hoja_seleccionada]
+        df_original = excel_data[hoja_seleccionada]
 
-        if 'ASESOR' not in df.columns or 'CLIENTE' not in df.columns:
+        if 'ASESOR' not in df_original.columns or 'CLIENTE' not in df_original.columns:
             st.error("❌ Las columnas 'ASESOR' o 'CLIENTE' no existen en la hoja seleccionada.")
             return
 
-        asesores = sorted(df['ASESOR'].dropna().unique())
-        clientes = sorted(df['CLIENTE'].dropna().unique())
+        # Identificar última fila como indicadores
+        df_datos = df_original[df_original['ASESOR'].notna() & df_original['CLIENTE'].notna()]
+        df_indicador = df_original[df_original['ASESOR'].isna() & df_original['CLIENTE'].isna()].copy()
+
+        # Filtros interdependientes
+        asesores = sorted(df_datos['ASESOR'].dropna().unique())
+        clientes = sorted(df_datos['CLIENTE'].dropna().unique())
 
         col1, col2 = st.columns(2)
 
         with col1:
             asesor_sel = st.selectbox("👤 Filtrar por asesor", [""] + asesores)
 
-        # Filtrar clientes si se seleccionó asesor
         if asesor_sel:
-            clientes_filtrados = df[df['ASESOR'] == asesor_sel]['CLIENTE'].dropna().unique()
+            clientes_filtrados = df_datos[df_datos['ASESOR'] == asesor_sel]['CLIENTE'].dropna().unique()
         else:
             clientes_filtrados = clientes
 
         with col2:
             cliente_sel = st.selectbox("🏢 Filtrar por cliente", [""] + sorted(clientes_filtrados))
 
-        # Filtrar asesor si se seleccionó cliente
         if cliente_sel and not asesor_sel:
-            asesores_filtrados = df[df['CLIENTE'] == cliente_sel]['ASESOR'].dropna().unique()
+            asesores_filtrados = df_datos[df_datos['CLIENTE'] == cliente_sel]['ASESOR'].dropna().unique()
             asesor_sel = st.selectbox("👤 Filtrar por asesor", [""] + sorted(asesores_filtrados), key="asesor_2")
 
-        # Aplicar filtros al dataframe
+        # Aplicar filtros
         if asesor_sel:
-            df = df[df['ASESOR'] == asesor_sel]
+            df_datos = df_datos[df_datos['ASESOR'] == asesor_sel]
         if cliente_sel:
-            df = df[df['CLIENTE'] == cliente_sel]
+            df_datos = df_datos[df_datos['CLIENTE'] == cliente_sel]
 
-        st.dataframe(df, use_container_width=True)
+        # Mostrar tabla principal
+        st.subheader("📊 Datos principales")
+        st.dataframe(df_datos, use_container_width=True)
+
+        # Mostrar indicadores
+        st.subheader("📈 Indicadores")
+        columnas_valores = df_datos.columns[2:]  # desde la tercera en adelante
+
+        if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
+            indicador = {}
+            for col in columnas_valores:
+                total = df_datos[col].notna().sum()
+                positivos = (df_datos[col] > 0).sum()
+                indicador[col] = f"{positivos} de {total}"
+
+            st.dataframe(pd.DataFrame([indicador]))
+
+        elif hoja_seleccionada.upper() == "VENTA MENSUAL":
+            suma = df_datos[columnas_valores].sum(numeric_only=True)
+            st.dataframe(pd.DataFrame([suma]))
+
+        else:
+            st.info("ℹ No se definieron indicadores para esta hoja.")
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
