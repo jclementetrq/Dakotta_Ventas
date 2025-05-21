@@ -93,13 +93,23 @@ def mostrar_reportes():
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        st.subheader("📊 Datos con filtro por columna")
-        st.data_editor(
-            df,
-            use_container_width=True,
-            num_rows="dynamic",
-            column_config={col: st.column_config.Column(label=col) for col in df.columns}
-        )
+        st.subheader("🔍 Filtros por columna")
+
+        # Crear filtros por cada columna
+        filtros = {}
+        for col in df.columns:
+            if df[col].dtype == "object" or df[col].dtype.name == "category":
+                opciones = df[col].dropna().unique().tolist()
+                seleccionadas = st.multiselect(f"Filtrar por '{col}'", opciones, default=opciones)
+                filtros[col] = seleccionadas
+
+        # Aplicar filtros al DataFrame
+        df_filtrado = df.copy()
+        for col, valores in filtros.items():
+            if valores:
+                df_filtrado = df_filtrado[df_filtrado[col].isin(valores)]
+
+        st.dataframe(df_filtrado, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
