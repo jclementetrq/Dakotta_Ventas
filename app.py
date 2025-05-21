@@ -78,6 +78,7 @@ def mostrar_login():
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
+    # Obtener el nombre real del archivo asociado al usuario
     nombre_archivo = mapeo_archivos.get(st.session_state.usuario)
     if not nombre_archivo:
         st.error("⚠ No se encontró archivo asociado a este usuario.")
@@ -93,23 +94,21 @@ def mostrar_reportes():
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        st.subheader("🔍 Filtros por columna")
+        # FILTROS: solo para asesor y cliente
+        with st.expander("🔍 Filtrar por asesor y cliente"):
+            col1, col2 = st.columns(2)
+            with col1:
+                asesor_seleccionado = st.selectbox("Filtrar por asesor", [""] + sorted(df["asesor"].dropna().unique()))
+            with col2:
+                cliente_seleccionado = st.selectbox("Filtrar por cliente", [""] + sorted(df["cliente"].dropna().unique()))
 
-        # Crear filtros por cada columna
-        filtros = {}
-        for col in df.columns:
-            if df[col].dtype == "object" or df[col].dtype.name == "category":
-                opciones = df[col].dropna().unique().tolist()
-                seleccionadas = st.multiselect(f"Filtrar por '{col}'", opciones, default=opciones)
-                filtros[col] = seleccionadas
+        # Aplicar filtros si están seleccionados
+        if asesor_seleccionado:
+            df = df[df["asesor"] == asesor_seleccionado]
+        if cliente_seleccionado:
+            df = df[df["cliente"] == cliente_seleccionado]
 
-        # Aplicar filtros al DataFrame
-        df_filtrado = df.copy()
-        for col, valores in filtros.items():
-            if valores:
-                df_filtrado = df_filtrado[df_filtrado[col].isin(valores)]
-
-        st.dataframe(df_filtrado, use_container_width=True)
+        st.dataframe(df, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
@@ -120,7 +119,6 @@ def mostrar_reportes():
         st.session_state.pagina = "login"
         st.session_state.usuario = None
         st.rerun()
-
 
 # ------------------------------------------
 # FLUJO PRINCIPAL
