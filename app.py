@@ -1,38 +1,35 @@
 import streamlit as st
 import pandas as pd
-from urllib.parse import quote
+import urllib.parse
 
 # ------------------------------------------
-# CONFIGURACIÓN GENERAL DE LA PÁGINA
+# CONFIGURACIÓN DE LA PÁGINA
 # ------------------------------------------
 st.set_page_config(page_title="Portal de Reportes", layout="wide")
 
 # ------------------------------------------
-# CONFIGURACIÓN DE LA APLICACIÓN
+# PARÁMETROS DE TU REPO DE GITHUB
 # ------------------------------------------
+USUARIO_GITHUB = "jclementetrq"
+REPO_GITHUB = "Dakotta_Ventas"
+RAMA = "main"
+CARPETA = "data"
 
-# Datos de acceso de los usuarios (puedes agregar más)
+# Diccionario de usuarios y contraseñas
 usuarios = {
     "ALMEIDA CUATIN JHONATHANN CARLOS": "1234",
     "CASTRO ALCIVAR EDA MARIA": "abcd",
     "CHANDI ERAZO JOSUE": "pass123",
 }
 
-# Parámetros del repositorio GitHub
-USUARIO_GITHUB = "jclementetrq"
-REPO_GITHUB = "Dakotta_Ventas"
-RAMO = "main"
-
-# ------------------------------------------
-# INICIALIZACIÓN DE ESTADO DE SESIÓN
-# ------------------------------------------
+# Inicialización de sesión
 if "pagina" not in st.session_state:
     st.session_state.pagina = "login"
 if "usuario" not in st.session_state:
     st.session_state.usuario = None
 
 # ------------------------------------------
-# FUNCIÓN: LOGIN
+# FUNCIÓN: mostrar login
 # ------------------------------------------
 def mostrar_login():
     st.title("🔐 Acceso al portal de reportes")
@@ -50,14 +47,15 @@ def mostrar_login():
             st.error("❌ Usuario o contraseña incorrectos.")
 
 # ------------------------------------------
-# FUNCIÓN: MOSTRAR REPORTES
+# FUNCIÓN: mostrar reportes
 # ------------------------------------------
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
-    # Nombre del archivo codificado para la URL
     nombre_archivo = f"{st.session_state.usuario}.xlsx"
-    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/tree/{RAMO}/data/{quote(nombre_archivo)}"
+    nombre_archivo_encoded = urllib.parse.quote(nombre_archivo)
+    
+    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
 
     try:
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
@@ -70,6 +68,7 @@ def mostrar_reportes():
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
+        st.write("📎 URL generada:", url_archivo)
 
     st.markdown("---")
     if st.button("🔒 Cerrar sesión"):
@@ -78,7 +77,7 @@ def mostrar_reportes():
         st.rerun()
 
 # ------------------------------------------
-# NAVEGACIÓN
+# FLUJO PRINCIPAL
 # ------------------------------------------
 if st.session_state.pagina == "login":
     mostrar_login()
