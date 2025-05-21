@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import urllib.parse
-from io import BytesIO
 
 # ------------------------------------------
 # CONFIGURACIÓN DE LA PÁGINA
@@ -79,6 +78,7 @@ def mostrar_login():
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
+    # Obtener el nombre real del archivo asociado al usuario
     nombre_archivo = mapeo_archivos.get(st.session_state.usuario)
     if not nombre_archivo:
         st.error("⚠ No se encontró archivo asociado a este usuario.")
@@ -90,54 +90,11 @@ def mostrar_reportes():
     try:
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
         hojas = list(excel_data.keys())
+
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        # Normalizar nombres de columna
-        df.columns = df.columns.str.strip().str.lower()
-        columnas = df.columns.tolist()
-
-        # Buscar las columnas de asesor y cliente
-        col_asesor = next((col for col in columnas if "asesor" in col), None)
-        col_cliente = next((col for col in columnas if "cliente" in col), None)
-
-        if not col_asesor or not col_cliente:
-            st.error("❌ No se encontraron columnas 'asesor' y 'cliente'. Verifica los encabezados del archivo.")
-            st.write("Columnas disponibles:", columnas)
-            return
-
-        columnas_fijas = [col_asesor, col_cliente]
-        columnas_dolares = [col for col in df.columns if col not in columnas_fijas]
-
-        # Separar última fila (indicadores)
-        datos = df.iloc[:-1]
-        indicadores = df.iloc[[-1]]
-
-        # Mostrar datos principales
-        st.subheader("📊 Datos principales")
-        datos_principales = datos[columnas_fijas + columnas_dolares]
-        st.dataframe(datos_principales.style.format({col: "${:,.2f}" for col in columnas_dolares}),
-                     use_container_width=True)
-
-        # Mostrar indicadores
-        st.subheader("📌 Indicadores (última fila)")
-        indicadores_df = indicadores[columnas_fijas + columnas_dolares]
-        st.dataframe(indicadores_df.style.format({col: "${:,.2f}" for col in columnas_dolares}),
-                     use_container_width=True)
-
-        # Botón de descarga
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            datos_principales.to_excel(writer, index=False, sheet_name="Datos")
-            indicadores_df.to_excel(writer, index=False, sheet_name="Indicadores")
-        output.seek(0)
-
-        st.download_button(
-            label="⬇️ Descargar reporte en Excel",
-            data=output,
-            file_name=f"Reporte_{st.session_state.usuario}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        st.dataframe(df, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
