@@ -98,15 +98,15 @@ def mostrar_reportes():
         with st.expander("🔍 Filtrar por asesor y cliente"):
             col1, col2 = st.columns(2)
             with col1:
-                asesor_seleccionado = st.selectbox("Filtrar por asesor", [""] + sorted(df["asesor"].dropna().unique()))
+                asesor_seleccionado = st.selectbox("Filtrar por asesor", [""] + sorted(df["ASESOR"].dropna().unique()))
             with col2:
-                cliente_seleccionado = st.selectbox("Filtrar por cliente", [""] + sorted(df["cliente"].dropna().unique()))
+                cliente_seleccionado = st.selectbox("Filtrar por cliente", [""] + sorted(df["CLIENTE"].dropna().unique()))
 
         # Aplicar filtros si están seleccionados
         if asesor_seleccionado:
-            df = df[df["asesor"] == asesor_seleccionado]
+            df = df[df["ASESOR"] == asesor_seleccionado]
         if cliente_seleccionado:
-            df = df[df["cliente"] == cliente_seleccionado]
+            df = df[df["CLIENTE"] == cliente_seleccionado]
 
         st.dataframe(df, use_container_width=True)
 
