@@ -94,46 +94,38 @@ def mostrar_reportes():
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        if df.shape[0] < 2 or df.shape[1] < 3:
-            st.warning("❗ El archivo no tiene suficientes filas o columnas.")
-            st.dataframe(df)
-        else:
-            # Separar datos principales (todas menos la última fila)
-            datos_principales = df.iloc[:-1, :]
-            indicadores = df.iloc[-1:, :]
+        # Separar última fila (indicadores)
+        datos = df.iloc[:-1]
+        indicadores = df.iloc[[-1]]
 
-            # Formatear columnas 3 en adelante como dólares
-            def formatear_dolares(df):
-                df_formateado = df.copy()
-                for col in df.columns[2:]:
-                    df_formateado[col] = df_formateado[col].apply(
-                        lambda x: f"${x:,.2f}" if isinstance(x, (int, float)) else x
-                    )
-                return df_formateado
+        # Mostrar datos principales
+        st.subheader("📊 Datos principales")
+        columnas_fijas = ["asesor", "cliente"]
+        columnas_dolares = [col for col in df.columns if col not in columnas_fijas]
 
-            datos_formateados = formatear_dolares(datos_principales)
-            indicadores_formateados = formatear_dolares(indicadores)
+        datos_principales = datos[columnas_fijas + columnas_dolares]
+        st.dataframe(datos_principales.style.format({col: "${:,.2f}" for col in columnas_dolares}),
+                     use_container_width=True)
 
-            # Mostrar tablas
-            st.subheader("📊 Datos principales")
-            st.dataframe(datos_formateados, use_container_width=True)
+        # Mostrar indicadores
+        st.subheader("📌 Indicadores (última fila)")
+        indicadores_df = indicadores[columnas_fijas + columnas_dolares]
+        st.dataframe(indicadores_df.style.format({col: "${:,.2f}" for col in columnas_dolares}),
+                     use_container_width=True)
 
-            st.subheader("📌 Indicadores finales")
-            st.dataframe(indicadores_formateados, use_container_width=True)
+        # Botón de descarga
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            datos_principales.to_excel(writer, index=False, sheet_name="Datos")
+            indicadores_df.to_excel(writer, index=False, sheet_name="Indicadores")
+        output.seek(0)
 
-            # Botón de descarga
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                datos_principales.to_excel(writer, index=False, sheet_name="Datos")
-                indicadores.to_excel(writer, index=False, sheet_name="Indicadores")
-            output.seek(0)
-
-            st.download_button(
-                label="⬇️ Descargar reporte en Excel",
-                data=output,
-                file_name=f"Reporte_{st.session_state.usuario}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+        st.download_button(
+            label="⬇️ Descargar reporte en Excel",
+            data=output,
+            file_name=f"Reporte_{st.session_state.usuario}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
