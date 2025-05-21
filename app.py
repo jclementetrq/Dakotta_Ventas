@@ -57,7 +57,7 @@ def mostrar_reportes():
 
     # Nombre del archivo codificado para la URL
     nombre_archivo = f"{st.session_state.usuario}.xlsx"
-    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMO}/data/{quote(nombre_archivo)}"
+    url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/tree/{RAMO}/data/{quote(nombre_archivo)}"
 
     try:
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
