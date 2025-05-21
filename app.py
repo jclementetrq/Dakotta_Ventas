@@ -93,27 +93,37 @@ def mostrar_reportes():
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df = excel_data[hoja_seleccionada]
 
-        # Asegurarse de que las columnas claves existen
         if 'asesor' not in df.columns or 'cliente' not in df.columns:
             st.error("❌ Las columnas 'asesor' o 'cliente' no existen en la hoja seleccionada.")
             return
 
-        # FILTROS DEPENDIENTES
-        asesor_seleccionado = st.selectbox("🔍 Filtrar por asesor", [""] + sorted(df['asesor'].dropna().unique()))
-        if asesor_seleccionado:
-            clientes_filtrados = df[df['asesor'] == asesor_seleccionado]['cliente'].dropna().unique()
-            cliente_seleccionado = st.selectbox("🔍 Filtrar por cliente", [""] + sorted(clientes_filtrados))
-        else:
-            cliente_seleccionado = st.selectbox("🔍 Filtrar por cliente", [""] + sorted(df['cliente'].dropna().unique()))
-            if cliente_seleccionado:
-                asesores_filtrados = df[df['cliente'] == cliente_seleccionado]['asesor'].dropna().unique()
-                asesor_seleccionado = st.selectbox("🔍 Filtrar por asesor", [""] + sorted(asesores_filtrados), index=0)
+        asesores = sorted(df['ASESOR'].dropna().unique())
+        clientes = sorted(df['CLIENTE'].dropna().unique())
 
-        # APLICAR FILTROS
-        if asesor_seleccionado:
-            df = df[df['asesor'] == asesor_seleccionado]
-        if cliente_seleccionado:
-            df = df[df['cliente'] == cliente_seleccionado]
+        col1, col2 = st.columns(2)
+
+        with col1:
+            asesor_sel = st.selectbox("👤 Filtrar por asesor", [""] + asesores)
+
+        # Filtrar clientes si se seleccionó asesor
+        if asesor_sel:
+            clientes_filtrados = df[df['ASESOR'] == asesor_sel]['cliente'].dropna().unique()
+        else:
+            clientes_filtrados = clientes
+
+        with col2:
+            cliente_sel = st.selectbox("🏢 Filtrar por cliente", [""] + sorted(clientes_filtrados))
+
+        # Filtrar asesor si se seleccionó cliente
+        if cliente_sel and not asesor_sel:
+            asesores_filtrados = df[df['CLIENTE'] == cliente_sel]['ASESOR'].dropna().unique()
+            asesor_sel = st.selectbox("👤 Filtrar por asesor", [""] + sorted(asesores_filtrados), key="asesor_2")
+
+        # Aplicar filtros al dataframe
+        if asesor_sel:
+            df = df[df['ASESOR'] == asesor_sel]
+        if cliente_sel:
+            df = df[df['CLIENTE'] == cliente_sel]
 
         st.dataframe(df, use_container_width=True)
 
