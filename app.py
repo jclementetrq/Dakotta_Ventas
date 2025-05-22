@@ -17,7 +17,7 @@ RAMA = "main"
 CARPETA = "data"
 
 # ------------------------------------------
-# CREDENCIALES Y MAPEO DE ARCHIVOS
+# CREDENCIALES Y ARCHIVOS DE USUARIO
 # ------------------------------------------
 usuarios = {
     "jalmeida": "Jalm_2025",
@@ -60,12 +60,10 @@ if "usuario" not in st.session_state:
 # ------------------------------------------
 def mostrar_login():
     st.title("🔐 Acceso al portal de reportes")
-
     with st.form("login_form"):
         usuario = st.text_input("👤 Usuario").strip()
         password = st.text_input("🔒 Contraseña", type="password").strip()
         submit = st.form_submit_button("Iniciar sesión")
-
     if submit:
         if usuario in usuarios and usuarios[usuario] == password:
             st.session_state.usuario = usuario
@@ -81,7 +79,6 @@ def mostrar_reportes():
 
     if "actualizar_datos" not in st.session_state:
         st.session_state.actualizar_datos = False
-
     if st.button("🔄 Actualizar datos"):
         st.session_state.actualizar_datos = not st.session_state.actualizar_datos
 
@@ -96,16 +93,15 @@ def mostrar_reportes():
     try:
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
         hojas = list(excel_data.keys())
-
         if not hojas:
-            st.error("⚠ El archivo Excel no contiene hojas o no pudo ser leído correctamente.")
+            st.error("⚠ El archivo Excel no contiene hojas.")
             return
 
         hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
         df_original = excel_data[hoja_seleccionada]
 
         if df_original.shape[0] < 2:
-            st.warning("⚠ La hoja no tiene suficientes filas para procesar datos.")
+            st.warning("⚠ La hoja no tiene suficientes filas.")
             return
 
         df_datos = df_original.iloc[:-1].copy()
@@ -113,10 +109,8 @@ def mostrar_reportes():
         # Filtros
         with st.expander("🔍 Filtros", expanded=False):
             col1, col2 = st.columns(2)
-
             asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
             filtro_asesor = col1.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
-
             if filtro_asesor != "Todos":
                 df_filtrado = df_datos[df_datos["ASESOR"] == filtro_asesor]
             else:
@@ -124,40 +118,37 @@ def mostrar_reportes():
 
             clientes_disponibles = df_filtrado["CLIENTE"].dropna().unique().tolist()
             filtro_cliente = col2.selectbox("Filtrar por cliente", options=["Todos"] + sorted(clientes_disponibles))
-
             if filtro_cliente != "Todos":
                 df_filtrado = df_filtrado[df_filtrado["CLIENTE"] == filtro_cliente]
 
             df_datos = df_filtrado
 
-        # Botón de descarga del asesor filtrado (si no es "Todos")
+        # Botón de descarga del archivo original del asesor filtrado
         if filtro_asesor != "Todos":
-            archivo_filtrado = next((v for k, v in mapeo_archivos.items() if filtro_asesor.upper() in v.upper()), None)
-            if archivo_filtrado:
-                archivo_filtrado_encoded = urllib.parse.quote(archivo_filtrado)
-                url_filtrado = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{archivo_filtrado_encoded}"
-                response_filtrado = requests.get(url_filtrado)
-                if response_filtrado.status_code == 200:
-                    st.download_button(
-                        label=f"⬇️ Descargar Excel original de {filtro_asesor}",
-                        data=response_filtrado.content,
-                        file_name=archivo_filtrado,
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
+            archivo_asesor = filtro_asesor + ".xlsx"
+            archivo_asesor_encoded = urllib.parse.quote(archivo_asesor)
+            url_asesor = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{archivo_asesor_encoded}"
+            response_asesor = requests.get(url_asesor)
+            if response_asesor.status_code == 200:
+                st.download_button(
+                    label=f"⬇️ Descargar Excel original de {filtro_asesor}",
+                    data=response_asesor.content,
+                    file_name=archivo_asesor,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 
+        # Tabla de datos
         st.subheader("📊 Datos principales")
         st.dataframe(df_datos, use_container_width=True)
 
         # Indicadores
         indicadores = {}
         cols_indicadores = df_datos.columns[2:]
-
         if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
             for col in cols_indicadores:
                 total = df_datos[col].notna().sum()
                 mayores_cero = (df_datos[col] > 0).sum()
                 indicadores[col] = f"{mayores_cero} de {total}"
-
         elif hoja_seleccionada.upper() == "VENTA MENSUAL":
             for col in cols_indicadores:
                 indicadores[col] = df_datos[col].sum()
@@ -170,7 +161,7 @@ def mostrar_reportes():
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
         st.write("📎 URL generada:", url_archivo)
 
-    # 🔽 Botón para descargar el archivo original del usuario
+    # 🔽 Botón para descargar el archivo original del usuario actual
     try:
         response = requests.get(url_archivo)
         if response.status_code == 200:
