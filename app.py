@@ -93,20 +93,11 @@ def mostrar_reportes():
 
     nombre_archivo_encoded = urllib.parse.quote(nombre_archivo)
     url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
-    st.markdown(f"🔗 Archivo fuente: [Ver en GitHub]({url_archivo})")
 
     try:
         response = requests.get(url_archivo)
         if response.status_code == 200:
             excel_bytes = BytesIO(response.content)
-
-            # 🔽 BOTÓN DE DESCARGA
-            st.download_button(
-                label="⬇️ Descargar Excel original",
-                data=excel_bytes,
-                file_name=nombre_archivo,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
 
             # Leer contenido Excel
             excel_data = pd.read_excel(excel_bytes, sheet_name=None)
@@ -164,6 +155,15 @@ def mostrar_reportes():
 
             st.subheader("📈 Indicadores")
             st.dataframe(df_indicadores_mostrado, use_container_width=True)
+
+            # 🔽 BOTÓN DE DESCARGA - AL FINAL
+            st.markdown("---")
+            st.download_button(
+                label="⬇️ Descargar Excel original",
+                data=excel_bytes,
+                file_name=nombre_archivo,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
         else:
             st.error(f"⚠ No se pudo descargar el archivo. Código: {response.status_code}")
