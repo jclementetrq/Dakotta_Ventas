@@ -75,9 +75,19 @@ def mostrar_login():
 # ------------------------------------------
 # FUNCIÓN: MOSTRAR REPORTES
 # ------------------------------------------
+
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
+    # Inicializamos una variable en session_state para controlar la recarga
+    if "actualizar_datos" not in st.session_state:
+        st.session_state.actualizar_datos = False
+
+    # Botón para actualizar datos: al cambiar actualizar_datos, el script se reejecuta
+    if st.button("🔄 Actualizar datos"):
+        st.session_state.actualizar_datos = not st.session_state.actualizar_datos
+
+    # Obtener archivo del usuario
     nombre_archivo = mapeo_archivos.get(st.session_state.usuario)
     if not nombre_archivo:
         st.error("⚠ No se encontró archivo asociado a este usuario.")
@@ -89,45 +99,64 @@ def mostrar_reportes():
     try:
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
         hojas = list(excel_data.keys())
-        hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
-        df = excel_data[hoja_seleccionada]
 
-        # Asegurar al menos 1 fila para evitar errores
-        if df.shape[0] < 2:
-            st.warning("La hoja seleccionada no contiene suficientes filas de datos.")
+        if not hojas:
+            st.error("⚠ El archivo Excel no contiene hojas o no pudo ser leído correctamente.")
             return
 
-        # Separar la última fila como indicadores
-        df_data = df.iloc[:-1].copy()
-        indicadores_raw = df.iloc[-1]
+        hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
+        df_original = excel_data[hoja_seleccionada]
 
-        # Mostrar la tabla principal
+        if df_original.shape[0] < 2:
+            st.warning("⚠ La hoja no tiene suficientes filas para procesar datos.")
+            return
+
+        # Separar datos e indicadores (última fila)
+        df_datos = df_original.iloc[:-1].copy()
+        df_indicadores = df_original.iloc[-1:].copy()
+
+        # Mostrar tabla principal (con filtros opcionales)
+        with st.expander("🔍 Filtros", expanded=False):
+            col1, col2 = st.columns(2)
+
+            asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
+            filtro_asesor = col1.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
+
+            if filtro_asesor != "Todos":
+                df_filtrado = df_datos[df_datos["ASESOR"] == filtro_asesor]
+            else:
+                df_filtrado = df_datos.copy()
+
+            clientes_disponibles = df_filtrado["CLIENTE"].dropna().unique().tolist()
+            filtro_cliente = col2.selectbox("Filtrar por cliente", options=["Todos"] + sorted(clientes_disponibles))
+
+            if filtro_cliente != "Todos":
+                df_filtrado = df_filtrado[df_filtrado["CLIENTE"] == filtro_cliente]
+
+            df_datos = df_filtrado
+
+        # Mostrar tabla de datos
         st.subheader("📊 Datos principales")
-        st.dataframe(df_data, use_container_width=True)
+        st.dataframe(df_datos, use_container_width=True)
 
-        # Calcular indicadores desde la columna 3 en adelante
-        col_indicadores = df.columns[2:]
+        # Procesar indicadores según la hoja
+        indicadores = {}
+        cols_indicadores = df_datos.columns[2:]
 
         if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
-            indicadores = {
-                col: f"{(df_data[col] > 0).sum()} de {len(df_data[col])}"
-                for col in col_indicadores
-            }
+            for col in cols_indicadores:
+                total = df_datos[col].notna().sum()
+                mayores_cero = (df_datos[col] > 0).sum()
+                indicadores[col] = f"{mayores_cero} de {total}"
+
         elif hoja_seleccionada.upper() == "VENTA MENSUAL":
-            indicadores = {
-                col: df_data[col].sum()
-                for col in col_indicadores
-            }
-        else:
-            indicadores = {
-                col: indicadores_raw[col]
-                for col in col_indicadores
-            }
+            for col in cols_indicadores:
+                indicadores[col] = df_datos[col].sum()
+
+        df_indicadores_mostrado = pd.DataFrame([indicadores], columns=cols_indicadores)
 
         st.subheader("📈 Indicadores")
-        indicadores_df = pd.DataFrame([indicadores])  # Una fila con columnas originales
-        st.dataframe(indicadores_df, use_container_width=True)
-
+        st.dataframe(df_indicadores_mostrado, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
@@ -137,7 +166,7 @@ def mostrar_reportes():
     if st.button("🔒 Cerrar sesión"):
         st.session_state.pagina = "login"
         st.session_state.usuario = None
-        st.rerun()
+        # No necesitamos rerun aquí porque cambiar la página ya hace recargar la app
 
 # ------------------------------------------
 # FLUJO PRINCIPAL
