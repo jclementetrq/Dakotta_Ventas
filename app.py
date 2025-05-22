@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import urllib.parse
+import requests
+from io import BytesIO
 
 # ------------------------------------------
 # CONFIGURACIÓN DE LA PÁGINA
@@ -83,7 +85,7 @@ def mostrar_reportes():
     if "actualizar_datos" not in st.session_state:
         st.session_state.actualizar_datos = False
 
-    # Botón para actualizar datos: al cambiar actualizar_datos, el script se reejecuta
+    # Botón para actualizar datos
     if st.button("🔄 Actualizar datos"):
         st.session_state.actualizar_datos = not st.session_state.actualizar_datos
 
@@ -97,6 +99,20 @@ def mostrar_reportes():
     url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
 
     try:
+        # Descargar archivo para permitir descarga
+        response = requests.get(url_archivo)
+        if response.status_code == 200:
+            excel_bytes = BytesIO(response.content)
+            st.download_button(
+                label="⬇️ Descargar Excel original",
+                data=excel_bytes,
+                file_name=nombre_archivo,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+        else:
+            st.warning("⚠ No se pudo descargar el archivo para su descarga.")
+
+        # Leer contenido del Excel
         excel_data = pd.read_excel(url_archivo, sheet_name=None)
         hojas = list(excel_data.keys())
 
@@ -115,7 +131,7 @@ def mostrar_reportes():
         df_datos = df_original.iloc[:-1].copy()
         df_indicadores = df_original.iloc[-1:].copy()
 
-        # Mostrar tabla principal (con filtros opcionales)
+        # Mostrar filtros
         with st.expander("🔍 Filtros", expanded=False):
             col1, col2 = st.columns(2)
 
@@ -135,11 +151,11 @@ def mostrar_reportes():
 
             df_datos = df_filtrado
 
-        # Mostrar tabla de datos
+        # Mostrar datos principales
         st.subheader("📊 Datos principales")
         st.dataframe(df_datos, use_container_width=True)
 
-        # Procesar indicadores según la hoja
+        # Calcular indicadores
         indicadores = {}
         cols_indicadores = df_datos.columns[2:]
 
@@ -166,7 +182,6 @@ def mostrar_reportes():
     if st.button("🔒 Cerrar sesión"):
         st.session_state.pagina = "login"
         st.session_state.usuario = None
-        # No necesitamos rerun aquí porque cambiar la página ya hace recargar la app
 
 # ------------------------------------------
 # FLUJO PRINCIPAL
