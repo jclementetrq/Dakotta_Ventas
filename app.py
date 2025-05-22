@@ -125,9 +125,9 @@ def mostrar_reportes():
             }
 
         st.subheader("📈 Indicadores")
-        indicadores_df = pd.DataFrame(indicadores, index=["Resultado"]).T
-        indicadores_df.columns = ["Indicador"]
+        indicadores_df = pd.DataFrame([indicadores])  # Una fila con columnas originales
         st.dataframe(indicadores_df, use_container_width=True)
+
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
