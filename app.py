@@ -77,19 +77,15 @@ def mostrar_login():
 # ------------------------------------------
 # FUNCIÓN: MOSTRAR REPORTES
 # ------------------------------------------
-
 def mostrar_reportes():
     st.title(f"📄 Reporte de {st.session_state.usuario}")
 
-    # Inicializamos una variable en session_state para controlar la recarga
     if "actualizar_datos" not in st.session_state:
         st.session_state.actualizar_datos = False
 
-    # Botón para actualizar datos
     if st.button("🔄 Actualizar datos"):
         st.session_state.actualizar_datos = not st.session_state.actualizar_datos
 
-    # Obtener archivo del usuario
     nombre_archivo = mapeo_archivos.get(st.session_state.usuario)
     if not nombre_archivo:
         st.error("⚠ No se encontró archivo asociado a este usuario.")
@@ -97,85 +93,83 @@ def mostrar_reportes():
 
     nombre_archivo_encoded = urllib.parse.quote(nombre_archivo)
     url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
+    st.markdown(f"🔗 Archivo fuente: [Ver en GitHub]({url_archivo})")
 
     try:
-        # Descargar archivo para permitir descarga
         response = requests.get(url_archivo)
         if response.status_code == 200:
             excel_bytes = BytesIO(response.content)
+
+            # 🔽 BOTÓN DE DESCARGA
             st.download_button(
                 label="⬇️ Descargar Excel original",
                 data=excel_bytes,
                 file_name=nombre_archivo,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
+            # Leer contenido Excel
+            excel_data = pd.read_excel(excel_bytes, sheet_name=None)
+            hojas = list(excel_data.keys())
+
+            if not hojas:
+                st.error("⚠ El archivo Excel no contiene hojas o no pudo ser leído correctamente.")
+                return
+
+            hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
+            df_original = excel_data[hoja_seleccionada]
+
+            if df_original.shape[0] < 2:
+                st.warning("⚠ La hoja no tiene suficientes filas para procesar datos.")
+                return
+
+            df_datos = df_original.iloc[:-1].copy()
+            df_indicadores = df_original.iloc[-1:].copy()
+
+            with st.expander("🔍 Filtros", expanded=False):
+                col1, col2 = st.columns(2)
+                asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
+                filtro_asesor = col1.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
+
+                if filtro_asesor != "Todos":
+                    df_filtrado = df_datos[df_datos["ASESOR"] == filtro_asesor]
+                else:
+                    df_filtrado = df_datos.copy()
+
+                clientes_disponibles = df_filtrado["CLIENTE"].dropna().unique().tolist()
+                filtro_cliente = col2.selectbox("Filtrar por cliente", options=["Todos"] + sorted(clientes_disponibles))
+
+                if filtro_cliente != "Todos":
+                    df_filtrado = df_filtrado[df_filtrado["CLIENTE"] == filtro_cliente]
+
+                df_datos = df_filtrado
+
+            st.subheader("📊 Datos principales")
+            st.dataframe(df_datos, use_container_width=True)
+
+            indicadores = {}
+            cols_indicadores = df_datos.columns[2:]
+
+            if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
+                for col in cols_indicadores:
+                    total = df_datos[col].notna().sum()
+                    mayores_cero = (df_datos[col] > 0).sum()
+                    indicadores[col] = f"{mayores_cero} de {total}"
+
+            elif hoja_seleccionada.upper() == "VENTA MENSUAL":
+                for col in cols_indicadores:
+                    indicadores[col] = df_datos[col].sum()
+
+            df_indicadores_mostrado = pd.DataFrame([indicadores], columns=cols_indicadores)
+
+            st.subheader("📈 Indicadores")
+            st.dataframe(df_indicadores_mostrado, use_container_width=True)
+
         else:
-            st.warning("⚠ No se pudo descargar el archivo para su descarga.")
-
-        # Leer contenido del Excel
-        excel_data = pd.read_excel(url_archivo, sheet_name=None)
-        hojas = list(excel_data.keys())
-
-        if not hojas:
-            st.error("⚠ El archivo Excel no contiene hojas o no pudo ser leído correctamente.")
-            return
-
-        hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
-        df_original = excel_data[hoja_seleccionada]
-
-        if df_original.shape[0] < 2:
-            st.warning("⚠ La hoja no tiene suficientes filas para procesar datos.")
-            return
-
-        # Separar datos e indicadores (última fila)
-        df_datos = df_original.iloc[:-1].copy()
-        df_indicadores = df_original.iloc[-1:].copy()
-
-        # Mostrar filtros
-        with st.expander("🔍 Filtros", expanded=False):
-            col1, col2 = st.columns(2)
-
-            asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
-            filtro_asesor = col1.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
-
-            if filtro_asesor != "Todos":
-                df_filtrado = df_datos[df_datos["ASESOR"] == filtro_asesor]
-            else:
-                df_filtrado = df_datos.copy()
-
-            clientes_disponibles = df_filtrado["CLIENTE"].dropna().unique().tolist()
-            filtro_cliente = col2.selectbox("Filtrar por cliente", options=["Todos"] + sorted(clientes_disponibles))
-
-            if filtro_cliente != "Todos":
-                df_filtrado = df_filtrado[df_filtrado["CLIENTE"] == filtro_cliente]
-
-            df_datos = df_filtrado
-
-        # Mostrar datos principales
-        st.subheader("📊 Datos principales")
-        st.dataframe(df_datos, use_container_width=True)
-
-        # Calcular indicadores
-        indicadores = {}
-        cols_indicadores = df_datos.columns[2:]
-
-        if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
-            for col in cols_indicadores:
-                total = df_datos[col].notna().sum()
-                mayores_cero = (df_datos[col] > 0).sum()
-                indicadores[col] = f"{mayores_cero} de {total}"
-
-        elif hoja_seleccionada.upper() == "VENTA MENSUAL":
-            for col in cols_indicadores:
-                indicadores[col] = df_datos[col].sum()
-
-        df_indicadores_mostrado = pd.DataFrame([indicadores], columns=cols_indicadores)
-
-        st.subheader("📈 Indicadores")
-        st.dataframe(df_indicadores_mostrado, use_container_width=True)
+            st.error(f"⚠ No se pudo descargar el archivo. Código: {response.status_code}")
 
     except Exception as e:
-        st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
+        st.error(f"⚠ Error al procesar el archivo:\n\n{e}")
         st.write("📎 URL generada:", url_archivo)
 
     st.markdown("---")
