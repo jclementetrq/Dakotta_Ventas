@@ -20,17 +20,17 @@ CARPETA = "data"
 # CREDENCIALES Y ARCHIVOS DE USUARIO
 # ------------------------------------------
 usuarios = {
-    "jalmeida": "Jalm_2025",
-    "ecastro": "Ecas_2025",
-    "jchandi": "Jcha_2025",
-    "fguerrero": "Fgue_2025",
-    "ghidalgo": "Ghid_2025",
-    "blindao": "Blin_2025",
-    "tlozano": "Tloz_2025",
-    "oficina": "Ofi_2025",
-    "arios": "Ario_2025",
-    "estrobel": "Estr_2025",
-    "cvaca": "Cvac_2025",
+    "jalmeida": "Dkt_2025",
+    "ecastro": "Dkt_2025",
+    "jchandi": "Dkt_2025",
+    "fguerrero": "Dkt_2025",
+    "ghidalgo": "Dkt_2025",
+    "blindao": "Dkt_2025",
+    "tlozano": "Dkt_2025",
+    "oficina": "Dkt_2025",
+    "arios": "Dkt_2025",
+    "estrobel": "Dkt_2025",
+    "cvaca": "Dkt_2025",
 }
 
 mapeo_archivos = {
