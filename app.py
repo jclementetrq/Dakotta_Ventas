@@ -47,6 +47,8 @@ mapeo_archivos = {
     "arios": "RIOS CARRION ANGEL BENIGNO.xlsx",
     "estrobel": "STROBEL CORDERO MARIA ELISABETH.xlsx",
     "cvaca": "VACA PANCHI CAROLINA.xlsx",
+    "riler": "ILLER LOPEZ ROBERTO FERNANDO.xlsx",
+    "cmeza": "MEZA PEÑA CARLOS ROBERTO.xlsx",
 }
 
 # ------------------------------------------
