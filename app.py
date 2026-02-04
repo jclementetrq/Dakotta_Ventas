@@ -31,8 +31,8 @@ usuarios = {
     "arios": "Dkt_2025",
     "estrobel": "Dkt_2025",
     "cvaca": "Dkt_2025",
-    "riler": "Riler_2025",
-    "cmeza": "Cmeza_2025",
+    "riler": "Dkt_2025",
+    "cmeza": "Dkt_2025",
 }
 
 mapeo_archivos = {
