@@ -31,6 +31,8 @@ usuarios = {
     "arios": "Dkt_2025",
     "estrobel": "Dkt_2025",
     "cvaca": "Dkt_2025",
+    "riller": "Dkt_2025",
+    "cmeza": "Dkt_2025",
 }
 
 mapeo_archivos = {
@@ -45,6 +47,8 @@ mapeo_archivos = {
     "arios": "RIOS CARRION ANGEL BENIGNO.xlsx",
     "estrobel": "STROBEL CORDERO MARIA ELISABETH.xlsx",
     "cvaca": "VACA PANCHI CAROLINA.xlsx",
+    "riller": "ILLER LOPEZ ROBERTO FERNANDO.xlsx",
+    "cmeza": "MEZA PEÑA CARLOS ROBERTO.xlsx",
 }
 
 # ------------------------------------------
