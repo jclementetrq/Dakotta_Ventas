@@ -154,6 +154,9 @@ except Exception as e:
         # -------------------------------
     # INDICADORES
     # -------------------------------
+    # -------------------------------
+    # INDICADORES
+    # -------------------------------
     indicadores = {}
     cols_indicadores = df_datos.columns[2:]
 
@@ -178,17 +181,21 @@ except Exception as e:
             indicadores["TOTAL VENTA"] = round(total_venta, 2)
             indicadores["TOTAL POR CUMPLIR"] = round(total_por_cumplir, 2)
             indicadores["CUMPLIMIENTO (%)"] = f"{cumplimiento_pct:.2f}%"
+
         except KeyError as e:
             st.warning(f"⚠ Faltan columnas esperadas: {e}")
 
-        df_indicadores_mostrado = pd.DataFrame([indicadores])
+    # -------------------------------
+    # MOSTRAR INDICADORES
+    # -------------------------------
+    df_indicadores_mostrado = pd.DataFrame([indicadores])
 
-        st.subheader("📈 Indicadores")
-        st.dataframe(df_indicadores_mostrado, use_container_width=True)
+    st.subheader("📈 Indicadores")
+    st.dataframe(df_indicadores_mostrado, use_container_width=True)
 
-    except Exception as e:
-        st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
-        st.write("📎 URL generada:", url_archivo)
+except Exception as e:
+    st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
+    st.write("📎 URL generada:", url_archivo)
 
     # 🔽 Botón para descargar el archivo original del usuario actual
     try:
