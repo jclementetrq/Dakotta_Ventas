@@ -145,6 +145,33 @@ def mostrar_reportes():
 
         # Tabla de datos
         st.subheader("📊 Datos principales")
+        
+        #cambios de javier johnson inicio
+        # -------------------------------
+# SEMÁFORO (ANTES DE LA TABLA)
+# -------------------------------
+if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+    def semaforo(row):
+        try:
+            cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
+            
+            if cumplimiento >= 100:
+                return "🟢"
+            elif cumplimiento >= 70:
+                return "🟡"
+            else:
+                return "🔴"
+        except:
+            return "⚪"
+
+    df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
+
+# -------------------------------
+# TABLA DE DATOS
+# -------------------------------
+st.subheader("📊 Datos principales")
+st.dataframe(df_datos, use_container_width=True)
+# fin de camios de javier johnson
         st.dataframe(df_datos, use_container_width=True)
         
         # Indicadores
