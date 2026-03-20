@@ -159,38 +159,38 @@ def mostrar_reportes():
             if filtro_asesor != "Todos":
                 df_datos = df_datos[df_datos["ASESOR"] == filtro_asesor]
 
-        st.subheader("📊 Resumen por asesor")
+        if "SEMAFORO" in df_datos.columns:
 
-        resumen = df_datos.groupby("ASESOR")["SEMAFORO"].value_counts().unstack().fillna(0)
+            st.subheader("📊 Resumen por asesor")
 
-        # asegurar columnas
-        for col in ["🟢", "🟡", "🔴"]:
-            if col not in resumen.columns:
-                resumen[col] = 0
+            resumen = df_datos.groupby("ASESOR")["SEMAFORO"].value_counts().unstack().fillna(0)
 
-        resumen["TOTAL"] = resumen.sum(axis=1)
-        resumen["% VERDE"] = (resumen["🟢"] / resumen["TOTAL"]) * 100
+            for col in ["🟢", "🟡", "🔴"]:
+                if col not in resumen.columns:
+                    resumen[col] = 0
 
-        st.dataframe(resumen.sort_values("% VERDE", ascending=False), use_container_width=True)
+            resumen["TOTAL"] = resumen.sum(axis=1)
+            resumen["% VERDE"] = (resumen["🟢"] / resumen["TOTAL"]) * 100
 
-        st.subheader("🏆 Ranking asesores")
+            st.dataframe(resumen.sort_values("% VERDE", ascending=False), use_container_width=True)
 
-        top = resumen.sort_values("% VERDE", ascending=False).head(5)
-        bottom = resumen.sort_values("% VERDE", ascending=True).head(5)
+            st.subheader("🏆 Ranking asesores")
 
-        col1, col2 = st.columns(2)
+                top = resumen.sort_values("% VERDE", ascending=False).head(5)
+            bottom = resumen.sort_values("% VERDE", ascending=True).head(5)
 
-        with col1:
-            st.write("🟢 Mejores")
-            st.dataframe(top, use_container_width=True)
+            col1, col2 = st.columns(2)
 
-        with col2:
-            st.write("🔴 Peores")
-            st.dataframe(bottom, use_container_width=True)
+            with col1:
+                st.write("🟢 Mejores")
+                st.dataframe(top, use_container_width=True)
 
-        criticos = resumen[resumen["% VERDE"] < 50]
+            with col2:
+                st.write("🔴 Peores")
+                st.dataframe(bottom, use_container_width=True)
 
-        st.warning(f"⚠ Asesores críticos esta semana: {len(criticos)}")
+            criticos = resumen[resumen["% VERDE"] < 50]
+            st.warning(f"⚠ Asesores críticos esta semana: {len(criticos)}")
 
         # -------------------------------
         # TABLA
