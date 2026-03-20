@@ -150,9 +150,9 @@ except Exception as e:
     st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
     st.write("📎 URL generada:", url_archivo)
         
-        # Indicadores
+    # Indicadores
     indicadores = {}
-        cols_indicadores = df_datos.columns[2:]
+    cols_indicadores = df_datos.columns[2:]
         if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
             for col in cols_indicadores:
                 total = df_datos[col].notna().sum()
