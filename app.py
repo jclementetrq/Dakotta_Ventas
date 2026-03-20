@@ -94,41 +94,41 @@ def mostrar_reportes():
     nombre_archivo_encoded = urllib.parse.quote(nombre_archivo)
     url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
 
-try:
-    excel_data = pd.read_excel(url_archivo, sheet_name=None)
-    hojas = list(excel_data.keys())
+    try:
+        excel_data = pd.read_excel(url_archivo, sheet_name=None)
+        hojas = list(excel_data.keys())
 
-    if not hojas:
-        st.error("⚠ El archivo Excel no contiene hojas.")
-        return
+        if not hojas:
+            st.error("⚠ El archivo Excel no contiene hojas.")
+            return
 
-    hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
-    df_original = excel_data[hoja_seleccionada]
+        hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
+        df_original = excel_data[hoja_seleccionada]
 
-    if df_original.shape[0] < 2:
-        st.warning("⚠ La hoja no tiene suficientes filas.")
-        return
+        if df_original.shape[0] < 2:
+            st.warning("⚠ La hoja no tiene suficientes filas.")
+            return
 
-    df_datos = df_original.iloc[:-1].copy()
+        df_datos = df_original.iloc[:-1].copy()
 
-    # -------------------------------
-    # SEMÁFORO
-    # -------------------------------
-    def semaforo(row):
-        try:
-            cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
+        # -------------------------------
+        # SEMÁFORO
+        # -------------------------------
+        def semaforo(row):
+            try:
+                cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
 
-            if cumplimiento >= 100:
-                return "🟢"
-            elif cumplimiento >= 70:
-                return "🟡"
-            else:
-                return "🔴"
-        except:
-            return "⚪"
+                if cumplimiento >= 100:
+                    return "🟢"
+                elif cumplimiento >= 70:
+                    return "🟡"
+                else:
+                    return "🔴"
+            except:
+                return "⚪"
 
-    if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
-        df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
+        if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+            df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
 
     # -------------------------------
     # FILTROS
