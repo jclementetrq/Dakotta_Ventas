@@ -112,9 +112,9 @@ def mostrar_reportes():
 
         df_datos = df_original.iloc[:-1].copy()
 
-        # -------------------------------
-        # SEMÁFORO
-        # -------------------------------
+# -------------------------------
+# SEMÁFORO (PRIMERO DEFINES)
+# -------------------------------
         from datetime import datetime
 
         def obtener_meta_semanal():
@@ -142,27 +142,25 @@ def mostrar_reportes():
                     return "🟡"
                 else:
                     return "🔴"
-
             except:
                 return "⚪"
 
-       if hoja_seleccionada.upper() == "VENTA MENSUAL":
 
-            # 🔥 columnas de meses existentes
+# -------------------------------
+# VENTA MENSUAL (LUEGO APLICAS)
+# -------------------------------
+        if hoja_seleccionada.upper() == "VENTA MENSUAL":
+
             columnas_meses = ["diciembre", "enero", "febrero", "marzo"]
 
-            # 🔥 crear venta total (suma de meses)
             df_datos["VENTA_TOTAL"] = df_datos[columnas_meses].sum(axis=1)
 
-            # 🔥 crear cumplimiento seguro
             df_datos["CUMPLIMIENTO"] = df_datos.apply(
                 lambda row: row["VENTA_TOTAL"] / row["PRESUPUESTO"] if row["PRESUPUESTO"] != 0 else 0,
                 axis=1
             )
 
-            # 🔥 aplicar semáforo
             df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
-
         # -------------------------------
         # FILTROS
         # -------------------------------
