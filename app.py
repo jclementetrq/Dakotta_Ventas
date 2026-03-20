@@ -151,7 +151,12 @@ def mostrar_reportes():
 # -------------------------------
         if hoja_seleccionada.upper() == "VENTA MENSUAL":
 
-            columnas_meses = ["diciembre", "enero", "febrero", "marzo"]
+            meses_validos = [
+                "enero","febrero","marzo","abril","mayo","junio",
+                "julio","agosto","septiembre","octubre","noviembre","diciembre"
+            ]
+
+            columnas_meses = [col for col in df_datos.columns if col.lower() in meses_validos]
 
             df_datos["VENTA_TOTAL"] = df_datos[columnas_meses].sum(axis=1)
 
