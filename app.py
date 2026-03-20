@@ -133,23 +133,19 @@ def mostrar_reportes():
     # -------------------------------
     # FILTROS
     # -------------------------------
-    with st.expander("🔍 Filtros", expanded=False):
-        asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
-        filtro_asesor = st.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
+        with st.expander("🔍 Filtros", expanded=False):
+            asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
+            filtro_asesor = st.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
 
-        if filtro_asesor != "Todos":
-            df_datos = df_datos[df_datos["ASESOR"] == filtro_asesor]
+            if filtro_asesor != "Todos":
+                df_datos = df_datos[df_datos["ASESOR"] == filtro_asesor]
 
-    # -------------------------------
-    # TABLA
-    # -------------------------------
-    st.subheader("📊 Datos principales")
-    st.dataframe(df_datos, use_container_width=True)
+        st.subheader("📊 Datos principales")
+        st.dataframe(df_datos, use_container_width=True)
 
-except Exception as e:
-    st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
-    st.write("📎 URL generada:", url_archivo)
-        
+    except Exception as e:
+        st.error(f"⚠ Error al cargar el archivo:\n\n{e}")
+        st.write("📎 URL generada:", url_archivo)
     # Indicadores
         # -------------------------------
     # INDICADORES
