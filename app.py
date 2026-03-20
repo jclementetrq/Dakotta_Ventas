@@ -151,7 +151,7 @@ except Exception as e:
     st.write("📎 URL generada:", url_archivo)
         
         # Indicadores
-        indicadores = {}
+    indicadores = {}
         cols_indicadores = df_datos.columns[2:]
         if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
             for col in cols_indicadores:
