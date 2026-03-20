@@ -190,7 +190,7 @@ def mostrar_reportes():
                 st.dataframe(bottom, use_container_width=True)
 
             criticos = resumen[resumen["% VERDE"] < 50]
-            st.warning(f"⚠ Asesores críticos esta semana: {len(criticos)}")
+            st.warning(f"⚠ asesores en riesgo de incumplimiento semanal: {len(criticos)}")
 
         # -------------------------------
         # TABLA
