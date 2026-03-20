@@ -181,10 +181,10 @@ except Exception as e:
         except KeyError as e:
             st.warning(f"⚠ Faltan columnas esperadas: {e}")
 
-    df_indicadores_mostrado = pd.DataFrame([indicadores])
+        df_indicadores_mostrado = pd.DataFrame([indicadores])
 
-    st.subheader("📈 Indicadores")
-    st.dataframe(df_indicadores_mostrado, use_container_width=True)
+        st.subheader("📈 Indicadores")
+        st.dataframe(df_indicadores_mostrado, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
