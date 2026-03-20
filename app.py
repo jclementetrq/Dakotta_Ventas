@@ -159,6 +159,39 @@ def mostrar_reportes():
             if filtro_asesor != "Todos":
                 df_datos = df_datos[df_datos["ASESOR"] == filtro_asesor]
 
+        st.subheader("📊 Resumen por asesor")
+
+        resumen = df_datos.groupby("ASESOR")["SEMAFORO"].value_counts().unstack().fillna(0)
+
+        # asegurar columnas
+        for col in ["🟢", "🟡", "🔴"]:
+            if col not in resumen.columns:
+                resumen[col] = 0
+
+        resumen["TOTAL"] = resumen.sum(axis=1)
+        resumen["% VERDE"] = (resumen["🟢"] / resumen["TOTAL"]) * 100
+
+        st.dataframe(resumen.sort_values("% VERDE", ascending=False), use_container_width=True)
+
+        st.subheader("🏆 Ranking asesores")
+
+        top = resumen.sort_values("% VERDE", ascending=False).head(5)
+        bottom = resumen.sort_values("% VERDE", ascending=True).head(5)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write("🟢 Mejores")
+            st.dataframe(top, use_container_width=True)
+
+        with col2:
+            st.write("🔴 Peores")
+            st.dataframe(bottom, use_container_width=True)
+
+        criticos = resumen[resumen["% VERDE"] < 50]
+
+        st.warning(f"⚠ Asesores críticos esta semana: {len(criticos)}")
+
         # -------------------------------
         # TABLA
         # -------------------------------
@@ -170,6 +203,9 @@ def mostrar_reportes():
             verdes = (df_datos["SEMAFORO"] == "🟢").sum()
             amarillos = (df_datos["SEMAFORO"] == "🟡").sum()
             rojos = (df_datos["SEMAFORO"] == "🔴").sum()
+
+            meta = obtener_meta_semanal()
+            st.info(f"📊 Meta esperada esta semana: {meta*100:.0f}%")
 
             col1.metric("🟢 Cumplen", f"{verdes} ({(verdes/total)*100:.1f}%)")
             col2.metric("🟡 En riesgo", f"{amarillos} ({(amarillos/total)*100:.1f}%)")
