@@ -83,6 +83,7 @@ def mostrar_reportes():
 
     if "actualizar_datos" not in st.session_state:
         st.session_state.actualizar_datos = False
+
     if st.button("🔄 Actualizar datos"):
         st.session_state.actualizar_datos = not st.session_state.actualizar_datos
 
@@ -130,9 +131,9 @@ def mostrar_reportes():
         if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
             df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
 
-    # -------------------------------
-    # FILTROS
-    # -------------------------------
+        # -------------------------------
+        # FILTROS
+        # -------------------------------
         with st.expander("🔍 Filtros", expanded=False):
             asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
             filtro_asesor = st.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
@@ -140,60 +141,55 @@ def mostrar_reportes():
             if filtro_asesor != "Todos":
                 df_datos = df_datos[df_datos["ASESOR"] == filtro_asesor]
 
+        # -------------------------------
+        # TABLA
+        # -------------------------------
         st.subheader("📊 Datos principales")
         st.dataframe(df_datos, use_container_width=True)
 
-    except Exception as e:
-        st.error(f"⚠ Error al cargar el archivo:\n\n{e}")
-        st.write("📎 URL generada:", url_archivo)
-    # Indicadores
         # -------------------------------
-    # INDICADORES
+        # INDICADORES
+        # -------------------------------
+        indicadores = {}
+        cols_indicadores = df_datos.columns[2:]
+
+        if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
+            for col in cols_indicadores:
+                total = df_datos[col].notna().sum()
+                mayores_cero = (df_datos[col] > 0).sum()
+                indicadores[col] = f"{mayores_cero} de {total}"
+
+        elif hoja_seleccionada.upper() == "VENTA MENSUAL":
+            for col in cols_indicadores:
+                indicadores[col] = df_datos[col].sum()
+
+        elif hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+            try:
+                total_presupuesto = df_datos["PRESUPUESTO"].sum()
+                total_venta = df_datos["VENTA"].sum()
+                total_por_cumplir = df_datos["POR CUMPLIR"].sum()
+                cumplimiento_pct = (total_venta / total_presupuesto) * 100 if total_presupuesto else 0
+
+                indicadores["TOTAL PRESUPUESTO"] = round(total_presupuesto, 2)
+                indicadores["TOTAL VENTA"] = round(total_venta, 2)
+                indicadores["TOTAL POR CUMPLIR"] = round(total_por_cumplir, 2)
+                indicadores["CUMPLIMIENTO (%)"] = f"{cumplimiento_pct:.2f}%"
+
+            except KeyError as e:
+                st.warning(f"⚠ Faltan columnas esperadas: {e}")
+
+        df_indicadores_mostrado = pd.DataFrame([indicadores])
+
+        st.subheader("📈 Indicadores")
+        st.dataframe(df_indicadores_mostrado, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
+        st.write("📎 URL generada:", url_archivo)
+
     # -------------------------------
+    # DESCARGA
     # -------------------------------
-    # INDICADORES
-    # -------------------------------
-    indicadores = {}
-    cols_indicadores = df_datos.columns[2:]
-
-    if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
-        for col in cols_indicadores:
-            total = df_datos[col].notna().sum()
-            mayores_cero = (df_datos[col] > 0).sum()
-            indicadores[col] = f"{mayores_cero} de {total}"
-
-    elif hoja_seleccionada.upper() == "VENTA MENSUAL":
-        for col in cols_indicadores:
-            indicadores[col] = df_datos[col].sum()
-
-    elif hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
-        try:
-            total_presupuesto = df_datos["PRESUPUESTO"].sum()
-            total_venta = df_datos["VENTA"].sum()
-            total_por_cumplir = df_datos["POR CUMPLIR"].sum()
-            cumplimiento_pct = (total_venta / total_presupuesto) * 100 if total_presupuesto else 0
-
-            indicadores["TOTAL PRESUPUESTO"] = round(total_presupuesto, 2)
-            indicadores["TOTAL VENTA"] = round(total_venta, 2)
-            indicadores["TOTAL POR CUMPLIR"] = round(total_por_cumplir, 2)
-            indicadores["CUMPLIMIENTO (%)"] = f"{cumplimiento_pct:.2f}%"
-
-        except KeyError as e:
-            st.warning(f"⚠ Faltan columnas esperadas: {e}")
-
-    # -------------------------------
-    # MOSTRAR INDICADORES
-    # -------------------------------
-    df_indicadores_mostrado = pd.DataFrame([indicadores])
-
-    st.subheader("📈 Indicadores")
-    st.dataframe(df_indicadores_mostrado, use_container_width=True)
-
-except Exception as e:
-    st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
-    st.write("📎 URL generada:", url_archivo)
-
-    # 🔽 Botón para descargar el archivo original del usuario actual
     try:
         response = requests.get(url_archivo)
         if response.status_code == 200:
@@ -207,6 +203,7 @@ except Exception as e:
         st.warning(f"⚠ No se pudo descargar el archivo original del usuario. Error: {e}")
 
     st.markdown("---")
+
     if st.button("🔒 Cerrar sesión"):
         st.session_state.pagina = "login"
         st.session_state.usuario = None
