@@ -176,7 +176,7 @@ def mostrar_reportes():
 
             st.subheader("🏆 Ranking asesores")
 
-                top = resumen.sort_values("% VERDE", ascending=False).head(5)
+            top = resumen.sort_values("% VERDE", ascending=False).head(5)
             bottom = resumen.sort_values("% VERDE", ascending=True).head(5)
 
             col1, col2 = st.columns(2)
