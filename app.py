@@ -109,14 +109,14 @@ def mostrar_reportes():
             return
 
         df_datos = df_original.iloc[:-1].copy()
-        # -------------------------------
+       # -------------------------------
 # SEMÁFORO
 # -------------------------------
-if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
-    def semaforo(row):
-        try:
-            cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
-            
+        if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+            def semaforo(row):
+                try:
+                cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
+
             if cumplimiento >= 100:
                 return "🟢"
             elif cumplimiento >= 70:
