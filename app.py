@@ -108,30 +108,25 @@ def mostrar_reportes():
             st.warning("⚠ La hoja no tiene suficientes filas.")
             return
 
-# -------------------------------
-# SEMÁFORO
-# -------------------------------
-df_datos = df_original.iloc[:-1].copy()
+     # -------------------------------
+    # SEMÁFORO
+    # -------------------------------
+        def semaforo(row):
+            try:
+                cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
 
-# 👇 DEFINES LA FUNCIÓN UNA SOLA VEZ
-def semaforo(row):
-    try:
-        cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
+                if cumplimiento >= 100:
+                    return "🟢"
+                elif cumplimiento >= 70:
+                    return "🟡"
+                else:
+                    return "🔴"
+            except:
+                return "⚪"
 
-        if cumplimiento >= 100:
-            return "🟢"
-        elif cumplimiento >= 70:
-            return "🟡"
-        else:
-            return "🔴"
-    except:
-        return "⚪"
-
-# 👇 SOLO LA USAS SI ES ESA HOJA
-if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
-    df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
-
-        df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
+        if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+             df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
+        
 
         # Filtros
         with st.expander("🔍 Filtros", expanded=False):
