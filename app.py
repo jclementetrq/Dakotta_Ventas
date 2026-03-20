@@ -118,8 +118,8 @@ def mostrar_reportes():
         from datetime import datetime
 
         def obtener_meta_semanal():
-                hoy = datetime.now()
-                semana = (hoy.day - 1) // 7 + 1
+            hoy = datetime.now()
+            semana = (hoy.day - 1) // 7 + 1
 
             if semana == 1:
                 return 0.12
