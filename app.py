@@ -151,33 +151,40 @@ except Exception as e:
     st.write("📎 URL generada:", url_archivo)
         
     # Indicadores
+        # -------------------------------
+    # INDICADORES
+    # -------------------------------
     indicadores = {}
     cols_indicadores = df_datos.columns[2:]
-        if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
-            for col in cols_indicadores:
-                total = df_datos[col].notna().sum()
-                mayores_cero = (df_datos[col] > 0).sum()
-                indicadores[col] = f"{mayores_cero} de {total}"
-        elif hoja_seleccionada.upper() == "VENTA MENSUAL":
-            for col in cols_indicadores:
-                indicadores[col] = df_datos[col].sum()
-        elif hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL": 
-            try:
-                total_presupuesto = df_datos["PRESUPUESTO"].sum()
-                total_venta = df_datos["VENTA"].sum()
-                total_por_cumplir = df_datos["POR CUMPLIR"].sum()
-                cumplimiento_pct = (total_venta / total_presupuesto) * 100 if total_presupuesto else 0
 
-                indicadores["TOTAL PRESUPUESTO"] = round(total_presupuesto, 2)
-                indicadores["TOTAL VENTA"] = round(total_venta, 2)
-                indicadores["TOTAL POR CUMPLIR"] = round(total_por_cumplir, 2)
-                indicadores["CUMPLIMIENTO (%)"] = f"{cumplimiento_pct:.2f}%"
-            except KeyError as e:
-                st.warning(f"⚠ Faltan columnas esperadas en la hoja 'CUMPLIMIENTO MENSUAL': {e}")
+    if hoja_seleccionada.upper() == "VENTAS POR GRUPO":
+        for col in cols_indicadores:
+            total = df_datos[col].notna().sum()
+            mayores_cero = (df_datos[col] > 0).sum()
+            indicadores[col] = f"{mayores_cero} de {total}"
 
-        df_indicadores_mostrado = pd.DataFrame([indicadores])
-        st.subheader("📈 Indicadores")
-        st.dataframe(df_indicadores_mostrado, use_container_width=True)
+    elif hoja_seleccionada.upper() == "VENTA MENSUAL":
+        for col in cols_indicadores:
+            indicadores[col] = df_datos[col].sum()
+
+    elif hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+        try:
+            total_presupuesto = df_datos["PRESUPUESTO"].sum()
+            total_venta = df_datos["VENTA"].sum()
+            total_por_cumplir = df_datos["POR CUMPLIR"].sum()
+            cumplimiento_pct = (total_venta / total_presupuesto) * 100 if total_presupuesto else 0
+
+            indicadores["TOTAL PRESUPUESTO"] = round(total_presupuesto, 2)
+            indicadores["TOTAL VENTA"] = round(total_venta, 2)
+            indicadores["TOTAL POR CUMPLIR"] = round(total_por_cumplir, 2)
+            indicadores["CUMPLIMIENTO (%)"] = f"{cumplimiento_pct:.2f}%"
+        except KeyError as e:
+            st.warning(f"⚠ Faltan columnas esperadas: {e}")
+
+    df_indicadores_mostrado = pd.DataFrame([indicadores])
+
+    st.subheader("📈 Indicadores")
+    st.dataframe(df_indicadores_mostrado, use_container_width=True)
 
     except Exception as e:
         st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
