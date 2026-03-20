@@ -146,11 +146,17 @@ def mostrar_reportes():
             except:
                 return "⚪"
 
-        if hoja_seleccionada.upper() == "VENTA MENSUAL":
+       if hoja_seleccionada.upper() == "VENTA MENSUAL":
 
-            # 🔥 crear cumplimiento
+            # 🔥 columnas de meses existentes
+            columnas_meses = ["diciembre", "enero", "febrero", "marzo"]
+
+            # 🔥 crear venta total (suma de meses)
+            df_datos["VENTA_TOTAL"] = df_datos[columnas_meses].sum(axis=1)
+
+            # 🔥 crear cumplimiento seguro
             df_datos["CUMPLIMIENTO"] = df_datos.apply(
-                lambda row: row["VENTA"] / row["PRESUPUESTO"] if row["PRESUPUESTO"] != 0 else 0,
+                lambda row: row["VENTA_TOTAL"] / row["PRESUPUESTO"] if row["PRESUPUESTO"] != 0 else 0,
                 axis=1
             )
 
