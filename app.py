@@ -144,6 +144,19 @@ def mostrar_reportes():
         # -------------------------------
         # TABLA
         # -------------------------------
+        if "SEMAFORO" in df_datos.columns:
+            col1, col2, col3 = st.columns(3)
+
+            total = len(df_datos) if len(df_datos) > 0 else 1
+
+            verdes = (df_datos["SEMAFORO"] == "🟢").sum()
+            amarillos = (df_datos["SEMAFORO"] == "🟡").sum()
+            rojos = (df_datos["SEMAFORO"] == "🔴").sum()
+
+            col1.metric("🟢 Cumplen", f"{verdes} ({(verdes/total)*100:.1f}%)")
+            col2.metric("🟡 En riesgo", f"{amarillos} ({(amarillos/total)*100:.1f}%)")
+            col3.metric("🔴 Críticos", f"{rojos} ({(rojos/total)*100:.1f}%)")
+        
         st.subheader("📊 Datos principales")
         st.dataframe(df_datos, use_container_width=True)
 
