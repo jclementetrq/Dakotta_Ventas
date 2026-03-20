@@ -115,16 +115,34 @@ def mostrar_reportes():
         # -------------------------------
         # SEMÁFORO
         # -------------------------------
+        from datetime import datetime
+
+        def obtener_meta_semanal():
+                hoy = datetime.now()
+                semana = (hoy.day - 1) // 7 + 1
+
+            if semana == 1:
+                return 0.12
+            elif semana == 2:
+                return 0.15
+            elif semana == 3:
+                return 0.33
+            else:
+                return 0.40
+
+
         def semaforo(row):
             try:
-                cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
+                cumplimiento = row["CUMPLIMIENTO"]
+                meta = obtener_meta_semanal()
 
-                if cumplimiento >= 100:
+                if cumplimiento >= meta:
                     return "🟢"
-                elif cumplimiento >= 70:
+                elif cumplimiento >= meta * 0.9:
                     return "🟡"
                 else:
                     return "🔴"
+
             except:
                 return "⚪"
 
