@@ -146,7 +146,15 @@ def mostrar_reportes():
             except:
                 return "⚪"
 
-        if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+        if hoja_seleccionada.upper() == "VENTA MENSUAL":
+
+            # 🔥 crear cumplimiento
+            df_datos["CUMPLIMIENTO"] = df_datos.apply(
+                lambda row: row["VENTA"] / row["PRESUPUESTO"] if row["PRESUPUESTO"] != 0 else 0,
+                axis=1
+            )
+
+            # 🔥 aplicar semáforo
             df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
 
         # -------------------------------
