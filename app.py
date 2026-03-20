@@ -94,76 +94,61 @@ def mostrar_reportes():
     nombre_archivo_encoded = urllib.parse.quote(nombre_archivo)
     url_archivo = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{nombre_archivo_encoded}"
 
-    try:
-        excel_data = pd.read_excel(url_archivo, sheet_name=None)
-        hojas = list(excel_data.keys())
-        if not hojas:
-            st.error("⚠ El archivo Excel no contiene hojas.")
-            return
+try:
+    excel_data = pd.read_excel(url_archivo, sheet_name=None)
+    hojas = list(excel_data.keys())
 
-        hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
-        df_original = excel_data[hoja_seleccionada]
+    if not hojas:
+        st.error("⚠ El archivo Excel no contiene hojas.")
+        return
 
-        if df_original.shape[0] < 2:
-            st.warning("⚠ La hoja no tiene suficientes filas.")
-            return
+    hoja_seleccionada = st.selectbox("📑 Selecciona una hoja", hojas)
+    df_original = excel_data[hoja_seleccionada]
 
-     # -------------------------------
+    if df_original.shape[0] < 2:
+        st.warning("⚠ La hoja no tiene suficientes filas.")
+        return
+
+    df_datos = df_original.iloc[:-1].copy()
+
+    # -------------------------------
     # SEMÁFORO
     # -------------------------------
-        def semaforo(row):
-            try:
-                cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
+    def semaforo(row):
+        try:
+            cumplimiento = (row["VENTA"] / row["PRESUPUESTO"]) * 100 if row["PRESUPUESTO"] else 0
 
-                if cumplimiento >= 100:
-                    return "🟢"
-                elif cumplimiento >= 70:
-                    return "🟡"
-                else:
-                    return "🔴"
-            except:
-                return "⚪"
+            if cumplimiento >= 100:
+                return "🟢"
+            elif cumplimiento >= 70:
+                return "🟡"
+            else:
+                return "🔴"
+        except:
+            return "⚪"
 
-        if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
-             df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
-        
+    if hoja_seleccionada.upper() == "CUMPLIMIENTO MENSUAL":
+        df_datos["SEMAFORO"] = df_datos.apply(semaforo, axis=1)
 
-        # Filtros
-        with st.expander("🔍 Filtros", expanded=False):
-            #col1, col2 = st.columns(2)
-            asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
-            #filtro_asesor = col1.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
-            filtro_asesor = st.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
-            if filtro_asesor != "Todos":
-                df_filtrado = df_datos[df_datos["ASESOR"] == filtro_asesor]
-                df_datos = df_filtrado
-            #else:
-            #    df_filtrado = df_datos.copy()
+    # -------------------------------
+    # FILTROS
+    # -------------------------------
+    with st.expander("🔍 Filtros", expanded=False):
+        asesores_disponibles = df_datos["ASESOR"].dropna().unique().tolist()
+        filtro_asesor = st.selectbox("Filtrar por asesor", options=["Todos"] + sorted(asesores_disponibles))
 
-            #clientes_disponibles = df_filtrado["CLIENTE"].dropna().unique().tolist()
-            #filtro_cliente = col2.selectbox("Filtrar por cliente", options=["Todos"] + sorted(clientes_disponibles))
-            #if filtro_cliente != "Todos":
-            #    df_filtrado = df_filtrado[df_filtrado["CLIENTE"] == filtro_cliente]
-
-            #df_datos = df_filtrado
-
-        # Botón de descarga del archivo original del asesor filtrado
         if filtro_asesor != "Todos":
-            archivo_asesor = filtro_asesor + ".xlsx"
-            archivo_asesor_encoded = urllib.parse.quote(archivo_asesor)
-            url_asesor = f"https://raw.githubusercontent.com/{USUARIO_GITHUB}/{REPO_GITHUB}/{RAMA}/{CARPETA}/{archivo_asesor_encoded}"
-            response_asesor = requests.get(url_asesor)
-            if response_asesor.status_code == 200:
-                st.download_button(
-                    label=f"⬇️ Descargar Excel original de {filtro_asesor}",
-                    data=response_asesor.content,
-                    file_name=archivo_asesor,
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+            df_datos = df_datos[df_datos["ASESOR"] == filtro_asesor]
 
-        # Tabla de datos
-        st.subheader("📊 Datos principales")
-        st.dataframe(df_datos, use_container_width=True)
+    # -------------------------------
+    # TABLA
+    # -------------------------------
+    st.subheader("📊 Datos principales")
+    st.dataframe(df_datos, use_container_width=True)
+
+except Exception as e:
+    st.error(f"⚠ Error al cargar el archivo desde GitHub:\n\n{e}")
+    st.write("📎 URL generada:", url_archivo)
         
         # Indicadores
         indicadores = {}
